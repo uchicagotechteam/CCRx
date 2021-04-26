@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+.h2 {
+	position:absolute
+}
+.svg{
+	position: absolute;
+  text-align: center;
+  padding: 2px;
+  font: 19px sans-serif;
+  background: #000;
+  color: #fff;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.row {
+	width: 300px;
+  float: right;
+	position:absolute;
+}
+
+#what{
+	width: 300px;
+	float: right;
+}
+#select{
+	width: 300px;
+  float: right;
+}
+
+</style>
+<meta charset="utf-8">
+<head>
+	<title> Sample Map </title>
+	<script src="http://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+  <script src="http://d3js.org/topojson.v1.min.js"></script>
+  <script type = "text/javascript" src="../data/chicago.geojson"></script>
+	<!-- src = https://raw.githubusercontent.com/dwillis/nyc-maps/master/school_districts.geojson -->
+
+
+</head>
+<body>
+    <br><br>
+	<a href="http://127.0.0.1:5000" class="btn btn-outline-info">Return to Home Page</a><br>
+		 <div id="what"><p>No district selected.</p></div>
+		 <div id = "select">
+		 	<p> Choose what data you would like to display. </p>
+
+		 	<select id = "spending">
+			 <option value = "support"> School Spending per Student </option>
+			 <option value = "classroom"> Instructional Spending </option>
+			 <option value = "support"> Instructional Support Services </option>
+			 <option value = "leadership"> Leadership Support Services </option>
+			 <option value = "ancillary"> Ancillary Support Services </option>
+			 <option value = "building"> Building Services </option>
+		 </select>
+
+			<select id = "year">
+			<option value = "2004"> 2004 </option>
+			<option value = "2005"> 2005 </option>
+			<option value = "2006"> 2006 </option>
+			<option value = "2007"> 2007 </option>
+			<option value = "2008"> 2008 </option>
+			<option value = "2009"> 2009 </option>
+			<option value = "2010"> 2010 </option>
+			<option value = "2011"> 2011 </option>
+			<option value = "2012"> 2012 </option>
+	 	</select>
+		</div>
+
+</body>
+<script type = "text/javascript" src="../js/sample_map.js"></script>
