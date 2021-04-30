@@ -1,21 +1,39 @@
 ---
 title: "data1"
 author: "Julia Du"
-date: "4/23/2021"
+date: "`r lubridate::today()`"
 output: html_document
 ---
 
+## Load necessary libraries
+```{r, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(lubridate)
+library(broom)
+library(googlesheets)
 
-```{r cars}
-summary(cars)
+library(ivreg)
+library(lmtest)
+library(sandwich)
+library(moderndive)
+library(kableExtra)
+
+library(stargazer)
+
+theme_set(theme_minimal())
 ```
 
-## Including Plots
+## Import data
+```{r}
+test <- read_sheet("https://docs.google.com/spreadsheets/d/1EOzWrUxbi6h-fQwcdvLzLyAziyejw3cSYbZWp7WV_1M/edit#gid=113582572", sheet = 2)
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Play around with data
+```{r}
+test %>%
+```
+
+
+
+
