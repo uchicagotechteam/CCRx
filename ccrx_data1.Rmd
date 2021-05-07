@@ -10,7 +10,8 @@ output: html_document
 library(tidyverse)
 library(lubridate)
 library(broom)
-library(googlesheets)
+library(googlesheets4)
+library(janitor)
 
 library(ivreg)
 library(lmtest)
@@ -31,9 +32,111 @@ test <- read_sheet("https://docs.google.com/spreadsheets/d/1EOzWrUxbi6h-fQwcdvLz
 
 ## Play around with data
 ```{r}
-test %>%
+materials_df <- test %>%
+  clean_names() %>%
+ # select(15:19, -17) %>%
+  rename(
+    materials_often = what_materials_do_you_always_need_and_often_have_to_purchase,
+    materials_when = what_materials_do_you_purchase_when_you_can,
+    materials_dream = what_materials_do_you_dream_of_purchasing_but_cant_usually_afford_or_find,
+    materials_donated = what_materials_if_any_do_you_get_donated) %>%
+  mutate(materials_dream = sapply(materials_dream, toString),
+         materials_donated = sapply(materials_donated, toString)) %>%
+  mutate_all(.funs = tolower) 
+
+materials_df %>%
+  select(timestamp, materials_often) %>%
+  mutate(mat1 = strsplit(materials_often, ",")) %>%
+  unnest(mat1) %>%
+  mutate(mat1 = str_trim(mat1)) %>% 
+  group_by(mat1) %>%
+  summarize(count = n()) %>%
+  arrange(-count)
+
+
+materials_freq <- function(mat_col, suffix){
+  length_df <- materials_df %>%
+    count() %>%
+    pull()
+  
+  materials_df %>%
+    select(timestamp, {{mat_col}}) %>%
+    mutate(mat = strsplit({{mat_col}}, ",")) %>%
+    unnest(mat) %>%
+    mutate(mat = str_trim(mat)) %>%
+    group_by(mat) %>%
+    summarize(count = n()) %>%
+    mutate(prop = count/length_df*100) %>%
+    arrange(-count) #%>%
+   # rename("mat_{suffix}" := mat)
+  #  slice_head(n = 10)
+}
+
+  
+
+materials_freq(materials_often) %>%
+  slice_head(n = 10) %>%
+  ggplot(mapping = aes(x = mat, y = count, fill = mat, label = count)) +
+  geom_col() +
+  labs(title = "Materials most often used and bought by teachers", 
+       subtitle = "As of Apr. 2021", 
+       x = "Materials", y = "Number of teachers", fill = "") +
+  geom_label() +
+  theme(legend.position = "none")
+  
+materials_freq(materials_often) %>%
+  slice_head(n = 5) %>%
+  mutate(ypos = cumsum(prop)- 0.5*prop ) %>%
+  ggplot(aes(x="", y=prop, fill = mat, label = prop)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+#  theme(legend.position="none") +
+  geom_text(aes(y = ypos, label = mat), color = "white", size=5) #+
+#  geom_label(aes(y = ypos*.3), size = 2)
+
+
 ```
 
+
+https://www.r-graph-gallery.com/piechart-ggplot2.html
+
+# can ignore
+material_count <- function(material_string){
+  materials_df %>%
+    filter(str_detect(material, material_string)) %>%
+    count() %>%
+    mutate(material = material_string)
+}
+
+
+
+
+
+```{r}
+genre_count <- function(genre_string){
+  manga_75 %>%
+    filter(str_detect(genre, genre_string)) %>%
+    count() %>%
+    mutate(genre = genre_string)
+}
+
+genres_of_interest <- c("Action", "Comedy", "Drama", "Fantasy", "Romance")
+
+# visualize manga overall
+map_dfr(genres_of_interest, genre_count) %>%
+  ggplot(mapping = aes(x = genre, y = n, fill = genre, label = n)) +
+  geom_col() +
+  labs(title = "Common genres in 75 top-ranked mangas", 
+       subtitle = "As of Mar. 2021", 
+       x = "Genre", y = "Number of mangas", fill = "", 
+       caption = "Source: mangaupdates.com") +
+  geom_label() +
+  theme(legend.position = "none")
+```
+
+
+##
 
 
 
