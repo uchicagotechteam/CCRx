@@ -9,17 +9,13 @@ output: html_document
 ```{r, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(lubridate)
+library(ggrepel)
 library(broom)
 library(googlesheets4)
 library(janitor)
+library(viridis)
 
-library(ivreg)
-library(lmtest)
-library(sandwich)
-library(moderndive)
-library(kableExtra)
-
-library(stargazer)
+library(extrafont)
 
 theme_set(theme_minimal())
 ```
@@ -28,10 +24,13 @@ theme_set(theme_minimal())
 ```{r}
 test <- read_sheet("https://docs.google.com/spreadsheets/d/1EOzWrUxbi6h-fQwcdvLzLyAziyejw3cSYbZWp7WV_1M/edit#gid=113582572", sheet = 2)
 
+# spreadsheet 1?
+# how attendance changes over yrs & at diff locations
+
 ```
 
 ## Play around with data
-```{r}
+```{r clean_data}
 materials_df <- test %>%
   clean_names() %>%
  # select(15:19, -17) %>%
@@ -66,14 +65,19 @@ materials_freq <- function(mat_col, suffix){
     mutate(mat = str_trim(mat)) %>%
     group_by(mat) %>%
     summarize(count = n()) %>%
-    mutate(prop = count/length_df*100) %>%
-    arrange(-count) #%>%
+    mutate(prop = count/length_df) %>%
+    arrange(-count) %>%
+    mutate(mat = as_factor(mat))
    # rename("mat_{suffix}" := mat)
   #  slice_head(n = 10)
 }
+```
 
-  
 
+
+
+```{r}
+# column graph
 materials_freq(materials_often) %>%
   slice_head(n = 10) %>%
   ggplot(mapping = aes(x = mat, y = count, fill = mat, label = count)) +
@@ -83,7 +87,8 @@ materials_freq(materials_often) %>%
        x = "Materials", y = "Number of teachers", fill = "") +
   geom_label() +
   theme(legend.position = "none")
-  
+
+# pie graph
 materials_freq(materials_often) %>%
   slice_head(n = 5) %>%
   mutate(ypos = cumsum(prop)- 0.5*prop ) %>%
@@ -91,15 +96,59 @@ materials_freq(materials_often) %>%
   geom_bar(stat="identity", width=1, color="white") +
   coord_polar("y", start=0) +
   theme_void() + 
+  labs(title = "Materials most often used and bought by teachers", 
+       subtitle = "As of Apr. 2021", 
+       x = "Materials", y = "Number of teachers", fill = "") +
 #  theme(legend.position="none") +
   geom_text(aes(y = ypos, label = mat), color = "white", size=5) #+
 #  geom_label(aes(y = ypos*.3), size = 2)
+
+## this works!!! gives % labels
+wip <- materials_freq(materials_often) %>%
+  slice_head(n = 5) 
+wip %>%
+  mutate(
+    mat = fct_rev(mat),
+    cumulative = cumsum(count),
+    midpoint = cumulative - count/2, 
+    label = scales::percent(prop)) %>%
+ggplot(aes(x = 1, weight = count, fill = mat)) +
+  geom_bar(width = 1, position = "stack") +
+  coord_polar(theta = "y") +
+  geom_text(aes(x = 1.3, y = midpoint, label = label), color = "white") + 
+  scale_fill_viridis(discrete = TRUE, option = "turbo") +
+  guides(fill = guide_legend(title = "Materials")) +
+  labs(title = "Materials most often used and bought by teachers", 
+       subtitle = "As of Apr. 2021", 
+       x = "Materials", y = "Number of teachers", fill = "") +
+  theme_void() 
+
+
 
 
 ```
 
 
-https://www.r-graph-gallery.com/piechart-ggplot2.html
+# helpful links
+
+* https://stackoverflow.com/questions/41338757/adding-percentage-labels-on-pie-chart-in-r
+
+* https://www.r-graph-gallery.com/piechart-ggplot2.html
+
+
+
+```{r, eval = FALSE}
+# helpful pie graph, but labels are misplaced
+ggplot(aes(x = "", y = count, fill = mat)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start = 0) +
+  geom_label_repel(aes(label = scales::percent(prop)), size=2, show.legend = F, nudge_x = 3) +
+  guides(fill = guide_legend(title = "Materials"))
+```
+
+
+
+
 
 # can ignore
 material_count <- function(material_string){
