@@ -181,6 +181,24 @@ wip %>%
        subtitle = "As of Apr. 2021",
         caption = "Note: Top 5 materials only, so chart does not add up to 100%") 
 
+#top 10 waffle chart
+materials_freq(materials_often) %>%
+  slice_head(n = 10) %>%
+  mutate(mat = fct_rev(mat)) %>% #NEED THIS to order by most freq. NVM IT DOESN'T HELP
+  mutate(label = paste0(mat, " (", scales::percent(prop), ")")) %>%
+  ggplot(aes(fill = label, values = count)) +
+  geom_waffle(n_rows = 10, size = 0.33, color = "white", flip = TRUE, make_proportional = TRUE, radius = unit(0.5, "pt")) +
+  coord_equal() +
+  theme_ipsum(grid = "") +
+  #theme(legend.position = "bottom") +
+  #guides(fill = guide_legend(nrow = 2)) +
+  theme_enhance_waffle() +
+  ggthemes::scale_fill_tableau(name = NULL) +
+  labs(title = "Materials most often used and bought by teachers", 
+       subtitle = "As of Apr. 2021",
+        caption = "Note: Top 10 materials only, so chart does not add up to 100%") 
+
+
 ```
 
 
