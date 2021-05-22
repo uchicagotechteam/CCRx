@@ -15,7 +15,10 @@ library(googlesheets4)
 library(janitor)
 library(viridis)
 
+library(waffle)
+library(hrbrthemes)
 library(extrafont)
+library(ggthemes)
 
 theme_set(theme_minimal())
 ```
@@ -75,8 +78,92 @@ materials_freq <- function(mat_col, suffix){
 
 
 
-
 ```{r}
+mat_piechart <- function(freq5_df){
+  freq5_df %>%
+    mutate(mat = fct_rev(mat),
+           cumulative = cumsum(count),
+           midpoint = cumulative - count/2, 
+           label = scales::percent(prop)) %>%
+    ggplot(aes(x = 1, weight = count, fill = mat)) +
+    geom_bar(width = 1, position = "stack") +
+    coord_polar(theta = "y") +
+    geom_text(aes(x = 1.3, y = midpoint, label = label), color = "white") + 
+    scale_fill_viridis(discrete = TRUE, option = "turbo") +
+    guides(fill = guide_legend(title = "Materials")) +
+    labs(subtitle = "As of Apr. 2021", x = "Materials", 
+         y = "Number of teachers", fill = "", 
+         caption = "Note: Top 5 materials only, so chart does not add up to 100%") +
+    theme_void() +
+    theme(legend.position = "bottom")
+}
+
+materials_freq(materials_often) %>%
+  slice_head(n = 5) %>%
+  mat_piechart() +
+  labs(title = "Top 5 materials always needed & most frequently bought")
+
+materials_freq(materials_when) %>%
+  drop_na(mat) %>%
+  slice_head(n = 5) %>%
+  mat_piechart() +
+  labs(title = "Top 5 materials bought when funds allow")
+
+materials_freq(materials_dream) %>%
+  slice_head(n = 5) %>%
+  mat_piechart() +
+  labs(title = "Top 5 materials desired but unable to afford or find")
+
+materials_freq(materials_donated) %>%
+  slice_head(n = 5) %>%
+  mat_piechart() +
+  labs(title = "Top 5 materials received through donations")
+
+```
+
+
+# other possible graphs - ask for maggie's opinion
+```{r}
+# https://cran.r-project.org/web/packages/extrafont/README.html
+#font_import() - only needs to be done once
+loadfonts(device = "win")
+
+
+# column graph
+materials_freq(materials_often) %>%
+  slice_head(n = 10) %>%
+  ggplot(mapping = aes(x = mat, y = count, fill = mat, label = count)) +
+  geom_col() +
+  labs(title = "Materials most often used and bought by teachers", 
+       subtitle = "As of Apr. 2021", 
+       x = "Materials", y = "Number of teachers", fill = "") +
+  geom_label() +
+  theme_ipsum() +
+  theme(legend.position = "none")  
+
+
+#waffle graph
+#materials_freq(materials_often) %>%
+ # slice_head(n = 5) %>%
+  
+wip %>%
+  ggplot(aes(fill = mat, values = count)) +
+  geom_waffle(n_rows = 20, size = 0.33, color = "white") +
+  coord_equal() +
+  theme_ipsum(grid = "") +
+  theme_enhance_waffle() +
+  ggthemes::scale_fill_tableau(name = NULL)
+```
+
+
+# helpful links
+
+* **https://stackoverflow.com/questions/41338757/adding-percentage-labels-on-pie-chart-in-r**
+
+* https://www.r-graph-gallery.com/piechart-ggplot2.html
+
+# FUNCTIONING code for graphs (before wrote function)
+```{r, eval = FALSE}
 # column graph
 materials_freq(materials_often) %>%
   slice_head(n = 10) %>%
@@ -87,21 +174,6 @@ materials_freq(materials_often) %>%
        x = "Materials", y = "Number of teachers", fill = "") +
   geom_label() +
   theme(legend.position = "none")
-
-# pie graph
-materials_freq(materials_often) %>%
-  slice_head(n = 5) %>%
-  mutate(ypos = cumsum(prop)- 0.5*prop ) %>%
-  ggplot(aes(x="", y=prop, fill = mat, label = prop)) +
-  geom_bar(stat="identity", width=1, color="white") +
-  coord_polar("y", start=0) +
-  theme_void() + 
-  labs(title = "Materials most often used and bought by teachers", 
-       subtitle = "As of Apr. 2021", 
-       x = "Materials", y = "Number of teachers", fill = "") +
-#  theme(legend.position="none") +
-  geom_text(aes(y = ypos, label = mat), color = "white", size=5) #+
-#  geom_label(aes(y = ypos*.3), size = 2)
 
 ## this works!!! gives % labels
 wip <- materials_freq(materials_often) %>%
@@ -118,24 +190,11 @@ ggplot(aes(x = 1, weight = count, fill = mat)) +
   geom_text(aes(x = 1.3, y = midpoint, label = label), color = "white") + 
   scale_fill_viridis(discrete = TRUE, option = "turbo") +
   guides(fill = guide_legend(title = "Materials")) +
-  labs(title = "Materials most often used and bought by teachers", 
+  labs(title = "Top 5 materials most often used and bought by teachers", 
        subtitle = "As of Apr. 2021", 
        x = "Materials", y = "Number of teachers", fill = "") +
-  theme_void() 
-
-
-
-
+  theme_void()
 ```
-
-
-# helpful links
-
-* https://stackoverflow.com/questions/41338757/adding-percentage-labels-on-pie-chart-in-r
-
-* https://www.r-graph-gallery.com/piechart-ggplot2.html
-
-
 
 ```{r, eval = FALSE}
 # helpful pie graph, but labels are misplaced
@@ -144,6 +203,21 @@ ggplot(aes(x = "", y = count, fill = mat)) +
   coord_polar("y", start = 0) +
   geom_label_repel(aes(label = scales::percent(prop)), size=2, show.legend = F, nudge_x = 3) +
   guides(fill = guide_legend(title = "Materials"))
+
+# old pie graph - labels also misplaced
+materials_freq(materials_often) %>%
+  slice_head(n = 5) %>%
+  mutate(ypos = cumsum(prop)- 0.5*prop ) %>%
+  ggplot(aes(x="", y=prop, fill = mat, label = prop)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) +
+  theme_void() + 
+  labs(title = "Materials most often used and bought by teachers", 
+       subtitle = "As of Apr. 2021", 
+       x = "Materials", y = "Number of teachers", fill = "") +
+#  theme(legend.position="none") +
+  geom_text(aes(y = ypos, label = mat), color = "white", size=5) #+
+#  geom_label(aes(y = ypos*.3), size = 2)
 ```
 
 
