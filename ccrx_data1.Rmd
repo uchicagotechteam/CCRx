@@ -21,7 +21,23 @@ library(extrafont)
 library(ggthemes)
 
 theme_set(theme_minimal())
+
+# https://cran.r-project.org/web/packages/extrafont/README.html
+#font_import() - only needs to be done once
+loadfonts(device = "win")
 ```
+
+## Import Fonts
+https://r-coder.com/custom-fonts-r/#Import_the_system_custom_fonts
+Download any fonts & move them to "fonts" folder in R_projs folder. Then:
+```{r}
+#font_import(pattern = "Roboto-Condensed") 
+```
+
+tried using "C:\Users\jdemo\OneDrive\Documents\R_projs\fonts" & "./R_projs/fonts", but no dice. got same error message. 
+https://stackoverflow.com/questions/59949572/i-cannot-import-fonts-using-font-import
+ended up just moving downloaded fonts to "C:\Windows\Fonts" & used pattern arg in font_import.
+was able to import, but using theme_ipsum_rc still doesn't work (get "font family not found")
 
 ## Import data
 ```{r}
@@ -91,8 +107,7 @@ mat_piechart <- function(freq5_df){
     geom_text(aes(x = 1.3, y = midpoint, label = label), color = "white") + 
     scale_fill_viridis(discrete = TRUE, option = "turbo") +
     guides(fill = guide_legend(title = "Materials")) +
-    labs(subtitle = "As of Apr. 2021", x = "Materials", 
-         y = "Number of teachers", fill = "", 
+    labs(subtitle = "As of Apr. 2021",
          caption = "Note: Top 5 materials only, so chart does not add up to 100%") +
     theme_void() +
     theme(legend.position = "bottom")
@@ -124,11 +139,6 @@ materials_freq(materials_donated) %>%
 
 # other possible graphs - ask for maggie's opinion
 ```{r}
-# https://cran.r-project.org/web/packages/extrafont/README.html
-#font_import() - only needs to be done once
-loadfonts(device = "win")
-
-
 # column graph
 materials_freq(materials_often) %>%
   slice_head(n = 10) %>%
@@ -147,16 +157,36 @@ materials_freq(materials_often) %>%
  # slice_head(n = 5) %>%
   
 wip %>%
-  ggplot(aes(fill = mat, values = count)) +
-  geom_waffle(n_rows = 20, size = 0.33, color = "white") +
+  mutate(label = paste0(mat, " (", scales::percent(prop), ")")) %>%
+  ggplot(aes(fill = label, values = count)) +
+  geom_waffle(n_rows = 20, size = 0.33, color = "white", flip = TRUE) +
+  coord_equal() +
+#  theme_ipsum(grid = "") +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(nrow = 2)) +
+  theme_enhance_waffle() +
+  ggthemes::scale_fill_tableau(name = NULL) 
+
+wip %>%
+  mutate(label = paste0(mat, " (", scales::percent(prop), ")")) %>%
+  ggplot(aes(fill = label, values = count)) +
+  geom_waffle(n_rows = 10, size = 0.33, color = "white", flip = TRUE, make_proportional = TRUE, radius = unit(0.5, "pt")) +
   coord_equal() +
   theme_ipsum(grid = "") +
+  #theme(legend.position = "bottom") +
+  #guides(fill = guide_legend(nrow = 2)) +
   theme_enhance_waffle() +
-  ggthemes::scale_fill_tableau(name = NULL)
+  ggthemes::scale_fill_tableau(name = NULL) +
+  labs(title = "Materials most often used and bought by teachers", 
+       subtitle = "As of Apr. 2021",
+        caption = "Note: Top 5 materials only, so chart does not add up to 100%") 
+
 ```
 
 
 # helpful links
+
+* https://rud.is/rpubs/building-waffle-charts.html
 
 * **https://stackoverflow.com/questions/41338757/adding-percentage-labels-on-pie-chart-in-r**
 
