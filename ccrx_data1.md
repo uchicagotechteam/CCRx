@@ -1,12 +1,11 @@
----
-title: "data1"
-author: "Julia Du"
-date: "`r lubridate::today()`"
-output: github_document
----
+data1
+================
+Julia Du
+2021-05-27
 
 ## Load necessary libraries
-```{r, message = FALSE, warning = FALSE}
+
+``` r
 library(tidyverse)
 library(lubridate)
 library(ggrepel)
@@ -28,28 +27,57 @@ loadfonts(device = "win")
 ```
 
 ## Import Fonts
-https://r-coder.com/custom-fonts-r/#Import_the_system_custom_fonts
-Download any fonts & move them to "fonts" folder in R_projs folder. Then:
-```{r}
+
+<https://r-coder.com/custom-fonts-r/#Import_the_system_custom_fonts>
+Download any fonts & move them to “fonts” folder in R\_projs folder.
+Then:
+
+``` r
 #font_import(pattern = "Roboto-Condensed") 
 ```
 
-tried using "C:\Users\jdemo\OneDrive\Documents\R_projs\fonts" & "./R_projs/fonts", but no dice. got same error message. 
-https://stackoverflow.com/questions/59949572/i-cannot-import-fonts-using-font-import
-ended up just moving downloaded fonts to "C:\Windows\Fonts" & used pattern arg in font_import.
-was able to import, but using theme_ipsum_rc still doesn't work (get "font family not found")
+tried using "C:\_projs" & “./R\_projs/fonts”, but no dice. got same
+error message.
+<https://stackoverflow.com/questions/59949572/i-cannot-import-fonts-using-font-import>
+ended up just moving downloaded fonts to “C:” & used pattern arg in
+font\_import. was able to import, but using theme\_ipsum\_rc still
+doesn’t work (get “font family not found”)
 
 ## Import data
-```{r}
-test <- read_sheet("https://docs.google.com/spreadsheets/d/1EOzWrUxbi6h-fQwcdvLzLyAziyejw3cSYbZWp7WV_1M/edit#gid=113582572", sheet = 2)
 
+``` r
+test <- read_sheet("https://docs.google.com/spreadsheets/d/1EOzWrUxbi6h-fQwcdvLzLyAziyejw3cSYbZWp7WV_1M/edit#gid=113582572", sheet = 2)
+```
+
+    ## > Using an auto-discovered, cached token
+
+    ##   To suppress this message, modify your code or options to clearly consent to
+    ##   the use of a cached token
+
+    ##   See gargle's "Non-interactive auth" vignette for more details:
+
+    ##   <https://gargle.r-lib.org/articles/non-interactive-auth.html>
+
+    ## > The googlesheets4 package is using a cached token for 'duj@uchicago.edu'
+
+    ## Auto-refreshing stale OAuth token.
+
+    ## Reading from "Copy of 1. Copy of Active:  CCRx Teacher-Material Survey Responses"
+
+    ## Range "'Form Responses 1'"
+
+    ## New names:
+    ## * `` -> ...17
+    ## * `` -> ...30
+
+``` r
 # spreadsheet 1?
 # how attendance changes over yrs & at diff locations
-
 ```
 
 ## Process data
-```{r clean_data}
+
+``` r
 materials_df <- test %>%
   clean_names() %>%
  # select(15:19, -17) %>%
@@ -70,8 +98,24 @@ materials_df %>%
   group_by(mat1) %>%
   summarize(count = n()) %>%
   arrange(-count)
+```
 
+    ## # A tibble: 1,026 x 2
+    ##    mat1               count
+    ##    <chr>              <int>
+    ##  1 pencils              274
+    ##  2 paper                244
+    ##  3 markers              146
+    ##  4 glue                 114
+    ##  5 crayons               98
+    ##  6 pens                  66
+    ##  7 folders               64
+    ##  8 paint                 64
+    ##  9 notebooks             58
+    ## 10 construction paper    54
+    ## # ... with 1,016 more rows
 
+``` r
 materials_freq <- function(mat_col, suffix){
   length_df <- materials_df %>%
     count() %>%
@@ -92,9 +136,7 @@ materials_freq <- function(mat_col, suffix){
 }
 ```
 
-
-
-```{r}
+``` r
 mat_piechart <- function(freq5_df){
   freq5_df %>%
     mutate(mat = fct_rev(mat),
@@ -117,26 +159,39 @@ materials_freq(materials_often) %>%
   slice_head(n = 5) %>%
   mat_piechart() +
   labs(title = "Top 5 materials always needed & most frequently bought")
+```
 
+![](ccrx_data1_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
 materials_freq(materials_when) %>%
   drop_na(mat) %>%
   slice_head(n = 5) %>%
   mat_piechart() +
   labs(title = "Top 5 materials bought when funds allow")
+```
 
+![](ccrx_data1_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+
+``` r
 materials_freq(materials_dream) %>%
   slice_head(n = 5) %>%
   mat_piechart() +
   labs(title = "Top 5 materials desired but unable to afford or find")
+```
 
+![](ccrx_data1_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
+
+``` r
 materials_freq(materials_donated) %>%
   slice_head(n = 5) %>%
   mat_piechart() +
   labs(title = "Top 5 materials received through donations")
-
 ```
 
-```{r}
+![](ccrx_data1_files/figure-gfm/unnamed-chunk-4-4.png)<!-- -->
+
+``` r
 mat_waffle <- function(freq5_df){
   freq5_df %>%
     mutate(label = paste0(mat, " (", scales::percent(prop), ")")) %>%
@@ -184,6 +239,11 @@ colortest <- materials_freq(materials_donated) %>%
   
 
 colortest
+```
+
+![](ccrx_data1_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+``` r
 #colortest +
  # ggthemes::scale_fill_gdocs(name = NULL)
 #colortest +
@@ -194,8 +254,9 @@ colortest
 ggsave("colortest.png", width = 5, height = 5)
 ```
 
-# other possible graphs 
-```{r, eval = FALSE}
+# other possible graphs
+
+``` r
 # column graph
 materials_freq(materials_often) %>%
   slice_head(n = 10) %>%
@@ -275,21 +336,19 @@ materials_freq(materials_often) %>%
   labs(title = "Materials most often used and bought by teachers", 
        subtitle = "As of Apr. 2021",
         caption = "Note: Top 8 materials only, so chart does not add up to 100%") 
-
-
 ```
-
 
 # helpful links
 
-* https://rud.is/rpubs/building-waffle-charts.html
+-   <https://rud.is/rpubs/building-waffle-charts.html>
 
-* **https://stackoverflow.com/questions/41338757/adding-percentage-labels-on-pie-chart-in-r**
+-   **<https://stackoverflow.com/questions/41338757/adding-percentage-labels-on-pie-chart-in-r>**
 
-* https://www.r-graph-gallery.com/piechart-ggplot2.html
+-   <https://www.r-graph-gallery.com/piechart-ggplot2.html>
 
 # FUNCTIONING code for graphs (before wrote function)
-```{r, eval = FALSE}
+
+``` r
 # column graph
 materials_freq(materials_often) %>%
   slice_head(n = 10) %>%
@@ -322,7 +381,7 @@ ggplot(aes(x = 1, weight = count, fill = mat)) +
   theme_void()
 ```
 
-```{r, eval = FALSE}
+``` r
 # helpful pie graph, but labels are misplaced
 ggplot(aes(x = "", y = count, fill = mat)) +
   geom_bar(width = 1, stat = "identity") +
@@ -346,17 +405,8 @@ materials_freq(materials_often) %>%
 #  geom_label(aes(y = ypos*.3), size = 2)
 ```
 
-
-
-
-
 # can ignore
-material_count <- function(material_string){
-  materials_df %>%
-    filter(str_detect(material, material_string)) %>%
-    count() %>%
-    mutate(material = material_string)
-}
 
-
-
+material\_count &lt;- function(material\_string){ materials\_df %&gt;%
+filter(str\_detect(material, material\_string)) %&gt;% count() %&gt;%
+mutate(material = material\_string) }
